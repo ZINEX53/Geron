@@ -128,25 +128,9 @@ $$('.nav-links a').forEach(l => l.addEventListener('click', () => {
     if (mobileBtn) mobileBtn.querySelector('i').className = 'fas fa-bars';
 }));
 
+// Слайдер
 let currentSlide = 0, totalSlides = 0, slideTimer = null;
-function initSlider() {
-    const slider = $('#slider');
-    if (!slider) return;
-    totalSlides = $$('.slide').length;
-    const dots = $('#sliderDots');
-    if (dots) {
-        dots.innerHTML = '';
-        for (let i = 0; i < totalSlides; i++) {
-            const d = document.createElement('div');
-            d.className = `dot ${i === 0 ? 'active' : ''}`;
-            d.addEventListener('click', () => goToSlide(i));
-            dots.appendChild(d);
-        }
-    }
-    startAutoSlide();
-    slider.addEventListener('mouseenter', stopAutoSlide);
-    slider.addEventListener('mouseleave', startAutoSlide);
-}
+
 function goToSlide(i) {
     const slider = $('#slider');
     if (!slider) return;
@@ -156,12 +140,121 @@ function goToSlide(i) {
     slider.style.transform = `translateX(-${currentSlide * 100}%)`;
     $$('.dot').forEach((d, idx) => d.classList.toggle('active', idx === currentSlide));
 }
-function startAutoSlide() { stopAutoSlide(); slideTimer = setInterval(() => goToSlide(currentSlide + 1), 5000); }
+function startAutoSlide() { stopAutoSlide(); if (totalSlides > 0) slideTimer = setInterval(() => goToSlide(currentSlide + 1), 5000); }
 function stopAutoSlide() { clearInterval(slideTimer); }
+
 $('#prevBtn')?.addEventListener('click', () => goToSlide(currentSlide - 1));
 $('#nextBtn')?.addEventListener('click', () => goToSlide(currentSlide + 1));
 
-// АВТОРИЗАЦИЯ
+// Загрузка сотрудников
+async function loadEmployees() {
+    try {
+        const res = await API.request('employees.php');
+        if (res.success && res.employees?.length) {
+            const slider = $('#slider');
+            if (!slider) return;
+            
+            const gradients = ['#2d3f63', '#3d5a80', '#4a6fa5', '#5c80bc', '#6b8fc7', '#7a9ed0'];
+            
+            slider.innerHTML = res.employees.map((emp, i) => `
+                <div class="slide">
+                    <div class="slide-img" style="background:linear-gradient(135deg,${gradients[i % gradients.length]},#1a2b4c);display:flex;align-items:center;justify-content:center;font-size:80px;color:rgba(255,255,255,0.1);font-family:'Font Awesome 6 Free';font-weight:900">
+                        ${emp.name.split(' ')[0].charAt(0)}${emp.name.split(' ')[1] ? emp.name.split(' ')[1].charAt(0) : ''}
+                    </div>
+                    <div class="slide-info">
+                        <h3>${esc(emp.name)}</h3>
+                        <p>${esc(emp.position)}${emp.experience ? ', ' + esc(emp.experience) + ' опыта' : ''}${emp.description ? '. ' + esc(emp.description) : ''}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            totalSlides = res.employees.length;
+            currentSlide = 0;
+            goToSlide(0);
+            initSliderDots();
+            startAutoSlide();
+            slider.addEventListener('mouseenter', stopAutoSlide);
+            slider.addEventListener('mouseleave', startAutoSlide);
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки сотрудников:', e);
+    }
+}
+
+function initSliderDots() {
+    const dots = $('#sliderDots');
+    if (!dots) return;
+    dots.innerHTML = '';
+    for (let i = 0; i < totalSlides; i++) {
+        const d = document.createElement('div');
+        d.className = `dot ${i === 0 ? 'active' : ''}`;
+        d.addEventListener('click', () => goToSlide(i));
+        dots.appendChild(d);
+    }
+}
+
+// Загрузка вакансий
+async function loadVacancies() {
+    try {
+        const res = await API.request('vacancies.php');
+        if (res.success && res.vacancies?.length) {
+            const grid = $('#vacanciesGrid');
+            if (!grid) return;
+            
+            grid.innerHTML = res.vacancies.map(v => `
+                <div class="vacancy-card" data-position="${esc(v.title)}">
+                    <div class="vacancy-icon"><i class="fas ${esc(v.icon || 'fa-wrench')}"></i></div>
+                    <h3>${esc(v.title)}</h3>
+                    <p>${esc(v.description || '')}</p>
+                    <div class="vacancy-salary">${esc(v.salary || '')}</div>
+                    <button class="btn btn-outline btn-select-vacancy">Выбрать</button>
+                </div>
+            `).join('');
+            
+            bindVacancyEvents();
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки вакансий:', e);
+    }
+}
+
+function bindVacancyEvents() {
+    $$('.btn-select-vacancy').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const card = this.closest('.vacancy-card');
+            const pos = card.getAttribute('data-position');
+            $$('.vacancy-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            $('#vacancyPosition').value = pos;
+            fillVacancyFromProfile();
+            openModal('vacancyModal');
+        });
+    });
+    
+    $$('.vacancy-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            if (e.target.classList.contains('btn-select-vacancy')) return;
+            const pos = this.getAttribute('data-position');
+            $$('.vacancy-card').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+            $('#vacancyPosition').value = pos;
+            fillVacancyFromProfile();
+            openModal('vacancyModal');
+        });
+    });
+}
+
+function fillVacancyFromProfile() {
+    if (isLoggedIn && currentUser) {
+        if (!$('#vacancyFullName').value) $('#vacancyFullName').value = currentUser.name || '';
+        if (!$('#vacancyPhone').value) $('#vacancyPhone').value = currentUser.phone || '';
+        if (!$('#vacancyEmail').value) $('#vacancyEmail').value = currentUser.email || '';
+    }
+}
+
+// Формы
 $('#loginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -259,7 +352,6 @@ $('#resendCode')?.addEventListener('click', async (e) => {
     } catch (err) { showToast(err.message, 'error'); }
 });
 
-// ЗАЯВКА НА РЕМОНТ
 $('#requestForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { openModal('authModal'); showToast('Необходимо авторизоваться', 'error'); return; }
@@ -299,7 +391,6 @@ $('#requestForm')?.addEventListener('submit', async (e) => {
     finally { btn.disabled = false; btn.textContent = 'Отправить'; }
 });
 
-// ОТЗЫВ
 $('#reviewForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!isLoggedIn) { openModal('authModal'); showToast('Необходимо авторизоваться', 'error'); return; }
@@ -321,7 +412,6 @@ $('#reviewForm')?.addEventListener('submit', async (e) => {
     finally { btn.disabled = false; }
 });
 
-// ПРОФИЛЬ
 $('#profileForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -364,14 +454,12 @@ $('#myReviewForm')?.addEventListener('submit', async (e) => {
     } catch (err) { showToast(err.message, 'error'); }
 });
 
-// ВАКАНСИЯ
 $('#vacancyForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
     const originalHTML = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
-    
     try {
         const data = {
             position: $('#vacancyPosition').value,
@@ -383,16 +471,13 @@ $('#vacancyForm')?.addEventListener('submit', async (e) => {
             experience: $('#vacancyExperience').value,
             comment: $('#vacancyComment').value,
         };
-        
         if (!data.position || !data.full_name || !data.phone || !data.email) {
             showToast('Заполните все обязательные поля', 'error');
             btn.disabled = false;
             btn.innerHTML = originalHTML;
             return;
         }
-        
         const res = await API.submitVacancy(data);
-        
         if (res.success) {
             showToast(res.message || 'Заявка отправлена!', 'success');
             e.target.reset();
@@ -411,48 +496,7 @@ $('#vacancyForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// ВАКАНСИЯ — автозаполнение из профиля
-function fillVacancyFromProfile() {
-    if (isLoggedIn && currentUser) {
-        if (!$('#vacancyFullName').value) {
-            $('#vacancyFullName').value = currentUser.name || '';
-        }
-        if (!$('#vacancyPhone').value) {
-            $('#vacancyPhone').value = currentUser.phone || '';
-        }
-        if (!$('#vacancyEmail').value) {
-            $('#vacancyEmail').value = currentUser.email || '';
-        }
-    }
-}
-
-$$('.btn-select-vacancy').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const card = this.closest('.vacancy-card');
-        const pos = card.getAttribute('data-position');
-        $$('.vacancy-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        $('#vacancyPosition').value = pos;
-        fillVacancyFromProfile();
-        openModal('vacancyModal');
-    });
-});
-
-$$('.vacancy-card').forEach(card => {
-    card.addEventListener('click', function(e) {
-        if (e.target.classList.contains('btn-select-vacancy')) return;
-        const pos = this.getAttribute('data-position');
-        $$('.vacancy-card').forEach(c => c.classList.remove('selected'));
-        this.classList.add('selected');
-        $('#vacancyPosition').value = pos;
-        fillVacancyFromProfile();
-        openModal('vacancyModal');
-    });
-});
-
-// ЗАГРУЗКА ДАННЫХ
+// Загрузка данных профиля
 async function loadProfileData() {
     if (!isLoggedIn) return;
     try {
@@ -484,6 +528,8 @@ async function loadRequests() {
                         <div class="request-service">${esc(r.service_type)}</div>
                         <div class="request-vehicle">${esc(r.vehicle_model)}</div>
                         <div class="request-date"><i class="far fa-calendar"></i> ${formatDate(r.preferred_date)}</div>
+                        ${r.repair_date ? `<div class="request-date"><i class="fas fa-tools"></i> Ремонт: ${formatDate(r.repair_date)} ${r.repair_time || ''}</div>` : ''}
+                        ${r.admin_comment ? `<div class="request-date"><i class="fas fa-comment"></i> ${esc(r.admin_comment)}</div>` : ''}
                     </div>
                     <div class="request-status status-${r.status}">${statusText(r.status)}</div>
                     ${r.status === 'new' ? `<button class="btn btn-secondary btn-small" onclick="cancelRequest(${r.id})">Отменить</button>` : ''}
@@ -648,8 +694,9 @@ function setMinDates() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    initSlider();
     setMinDates();
+    await loadEmployees();
+    await loadVacancies();
     try {
         const auth = await API.checkAuth();
         if (auth.loggedIn && auth.user) {
