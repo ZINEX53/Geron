@@ -5,13 +5,20 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
+$envFile = __DIR__ . '/.env';
+if (file_exists($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        if (strpos(trim($line), '#') !== 0) putenv(trim($line));
+    }
+}
+
 define('MAIL_HOST', 'smtp.yandex.ru');
 define('MAIL_PORT', 587);
-define('MAIL_USER', 'vladimir.st4roverov@yandex.ru');
-define('MAIL_PASS', 'kdenepygywuusmia');
-define('MAIL_FROM', 'vladimir.st4roverov@yandex.ru');
-define('MAIL_FROM_NAME', 'ГЕРОН-АВТО');
-define('MAIL_TO', 'vovastar04@gmail.com');
+define('MAIL_USER', getenv('MAIL_USER') ?: 'your@email.ru');
+define('MAIL_PASS', getenv('MAIL_PASS') ?: 'your_password');
+define('MAIL_FROM', getenv('MAIL_FROM') ?: 'your@email.ru');
+define('MAIL_FROM_NAME', getenv('MAIL_FROM_NAME') ?: 'ГЕРОН-АВТО');
+define('MAIL_TO', getenv('MAIL_TO') ?: 'admin@email.ru');
 
 ini_set('session.cookie_httponly', 1);
 ini_set('session.use_only_cookies', 1);
