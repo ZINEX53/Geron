@@ -136,3 +136,30 @@ tr:hover { background: #f8f9fa; }
     .form-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
 }
+/* Ямы */
+.bays-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+.bay-col { background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
+.bay-header { background: #1a2b4c; color: #fff; padding: 12px; text-align: center; font-weight: 700; font-size: 16px; }
+.bay-slots { padding: 10px; min-height: 200px; max-height: 500px; overflow-y: auto; }
+.bay-slot { background: #f0f2f5; border-radius: 6px; padding: 10px; margin-bottom: 8px; border-left: 3px solid #ff6b35; font-size: 12px; position: relative; }
+.bay-slot .slot-time { font-weight: 700; color: #ff6b35; font-size: 14px; }
+.bay-slot .slot-id { position: absolute; top: 8px; right: 10px; background: #1a2b4c; color: #fff; border-radius: 10px; padding: 2px 8px; font-size: 11px; font-weight: 600; }
+.bay-slot .slot-car { font-weight: 600; margin: 3px 0; color: #333; }
+.bay-slot .slot-client { color: #666; font-size: 11px; }
+.bay-empty { text-align: center; color: #999; padding: 30px; font-size: 13px; }
+.bays-title { margin-bottom: 15px; color: #1a2b4c; }
+.slot-free-form { margin-top: 5px; }
+
+
+/* Фильтр */
+.filter-bar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+.filter-form { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+.filter-bar select, .filter-bar input { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 14px; }
+
+@media (max-width: 900px) {
+    .bays-container { grid-template-columns: repeat(2, 1fr); }
+    .calendar-section { grid-template-columns: 1fr; }
+}
+@media (max-width: 500px) {
+    .bays-container { grid-template-columns: 1fr; }
+}
