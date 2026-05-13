@@ -135,34 +135,51 @@ function showSection(id) {
     const vacanciesEl = $('#vacancies');
     const contactsEl = $('#contacts');
 
-    if (heroEl) heroEl.style.display = (id === 'home') ? '' : 'none';
-    if (sliderEl) sliderEl.style.display = (id === 'home') ? '' : 'none';
-    if (reviewsEl) reviewsEl.style.display = (id === 'home' || id === 'reviews') ? '' : 'none';
-    if (profileEl) profileEl.style.display = (id === 'profile') ? '' : 'none';
-    if (vacanciesEl) vacanciesEl.style.display = (id === 'vacancies') ? '' : 'none';
-    if (contactsEl) contactsEl.style.display = (id === 'contacts') ? '' : 'none';
+    // Скрываем всё
+    if (heroEl) heroEl.style.display = 'none';
+    if (sliderEl) sliderEl.style.display = 'none';
+    if (reviewsEl) reviewsEl.style.display = 'none';
+    if (profileEl) profileEl.style.display = 'none';
+    if (vacanciesEl) vacanciesEl.style.display = 'none';
+    if (contactsEl) contactsEl.style.display = 'none';
 
-    if (servicesEl) {
-        if (id === 'vacancies') {
-            servicesEl.style.display = 'none';
-        } else {
-            servicesEl.style.display = (id === 'home' || id === 'contacts') ? '' : 'none';
-        }
+    // Скрываем все блоки услуг
+    const allServices = document.querySelectorAll('.services');
+    allServices.forEach(el => el.style.display = 'none');
+
+    // Показываем нужное
+    if (id === 'home') {
+        if (heroEl) heroEl.style.display = '';
+        if (sliderEl) sliderEl.style.display = '';
+        if (reviewsEl) reviewsEl.style.display = '';
+        allServices.forEach(el => el.style.display = '');
+    } else if (id === 'services') {
+        const servicesSection = document.querySelector('#services');
+        if (servicesSection) servicesSection.style.display = '';
+        const contactsSection = document.querySelector('#contacts');
+        if (contactsSection) contactsSection.style.display = '';
+    } else if (id === 'reviews') {
+        if (reviewsEl) reviewsEl.style.display = '';
+    } else if (id === 'profile') {
+        if (profileEl) profileEl.style.display = '';
+        if (isLoggedIn) loadProfileData();
+    } else if (id === 'vacancies') {
+        if (vacanciesEl) vacanciesEl.style.display = '';
+    } else if (id === 'contacts') {
+        const contactsSection = document.querySelector('#contacts');
+        if (contactsSection) contactsSection.style.display = '';
     }
 
+    // Активный пункт меню
     $$('.nav-links a').forEach(l => {
         l.classList.remove('active');
-        if (l.getAttribute('href') === `#${id}`) {
-            l.classList.add('active');
-        }
+        if (l.getAttribute('href') === `#${id}`) l.classList.add('active');
+        if (id === 'home' && l.getAttribute('href') === '#') l.classList.add('active');
     });
-
-    if (id === 'profile' && isLoggedIn) {
-        loadProfileData();
-    }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
 
 const mobileBtn = $('#mobileMenuBtn');
 const navLinksEl = $('#navLinks');
@@ -886,37 +903,22 @@ $$('.btn-request').forEach(b => {
     });
 });
 
-// Навигация по ссылкам — ИСПРАВЛЕНО
+// Навигация по ссылкам
 $$('.nav-links a').forEach(a => {
     a.addEventListener('click', function(e) {
         const href = this.getAttribute('href');
-        
-        // Пропускаем ссылки на админку и другие внешние ссылки
-        if (!href || href === '#services') {
-            // Просто скроллим к услугам
-            return;
-        }
-        if (href.startsWith('admin/') || href.startsWith('http')) {
-            return;
-        }
-        
+
+        // Пропускаем внешние ссылки
+        if (href && (href.startsWith('admin/') || href.startsWith('http'))) return;
+
         e.preventDefault();
-        
-        if (href === '#') {
-            showSection('home');
-        } else if (href === '#profile') {
-            if (isLoggedIn) {
-                showSection('profile');
-            } else {
-                openAuthModal('login');
-            }
-        } else if (href === '#reviews') {
-            showSection('reviews');
-        } else if (href === '#contacts') {
-            showSection('contacts');
-        } else if (href === '#vacancies') {
-            showSection('vacancies');
-        }
+
+        if (href === '#' || !href) showSection('home');
+        else if (href === '#services') showSection('services');
+        else if (href === '#profile') isLoggedIn ? showSection('profile') : openAuthModal('login');
+        else if (href === '#reviews') showSection('reviews');
+        else if (href === '#contacts') showSection('contacts');
+        else if (href === '#vacancies') showSection('vacancies');
     });
 });
 
