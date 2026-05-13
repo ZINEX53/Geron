@@ -32,6 +32,7 @@ $totalUsers = $pdo->query("SELECT COUNT(*) FROM users")->fetchColumn();
                 <a href="resumes.php"><i class="fas fa-briefcase"></i> Заявки на вакансии</a>
                 <a href="employees.php"><i class="fas fa-users"></i> Сотрудники</a>
                 <a href="vacancies.php"><i class="fas fa-list-ul"></i> Вакансии</a>
+                <a href="import-price.php"><i class="fas fa-file-import"></i> Импорт прайса</a>
                 <a href="reviews.php"><i class="fas fa-star"></i> Отзывы</a>
                 <a href="profile.php"><i class="fas fa-user-cog"></i> Профиль</a>
                 <a href="logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Выйти</a>

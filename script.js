@@ -909,7 +909,7 @@ $$('.nav-links a').forEach(a => {
         const href = this.getAttribute('href');
 
         // Пропускаем внешние ссылки
-        if (href && (href.startsWith('admin/') || href.startsWith('http'))) return;
+        if (href && (href.startsWith('admin/') || href.startsWith('http') || href === 'price-list.html')) return;
 
         e.preventDefault();
 

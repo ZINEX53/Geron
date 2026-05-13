@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прайс-лист | ГЕРОН-АВТО</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="geron.css">
+    <style>
+        .price-page { min-height: 100vh; display: flex; flex-direction: column; }
+        .price-content { flex: 1; max-width: 1200px; margin: 30px auto; padding: 0 20px; width: 100%; }
+        .price-toolbar { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+        .price-toolbar select, .price-toolbar input { padding: 10px 14px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .price-toolbar select:focus, .price-toolbar input:focus { outline: none; border-color: #ff6b35; }
+        .price-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .price-table th { background: #1a2b4c; color: #fff; padding: 14px; text-align: left; font-weight: 600; font-size: 14px; }
+        .price-table td { padding: 12px 14px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .price-table tr:hover { background: #f8f9fa; }
+        .price-table .category-tag { display: inline-block; background: #ff6b35; color: #fff; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .price-table .price-value { font-weight: 700; color: #27ae60; font-size: 16px; white-space: nowrap; }
+        .btn-export { background: #27ae60; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .btn-export:hover { background: #219a52; }
+        .btn-back { background: #1a2b4c; color: #fff; padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 14px; }
+        .btn-back:hover { background: #2d3f63; }
+        .no-price { text-align: center; padding: 50px; color: #999; }
+    </style>
+</head>
+<body>
+<div class="price-page">
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <div class="logo">
+                    <div class="logo-icon"><i class="fas fa-truck-moving"></i></div>
+                    <div class="logo-text">ГЕРОН-<span>АВТО</span></div>
+                </div>
+                <ul class="nav-links">
+                    <li><a href="GERON.HTML">На сайт</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="price-content">
+        <h1 style="color:#1a2b4c;margin-bottom:25px">Прайс-лист</h1>
+        
+        <div class="price-toolbar">
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                <input type="text" id="searchInput" placeholder="Поиск по названию...">
+            </div>
+            <div style="display:flex;gap:10px">
+                <button class="btn-export" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Экспорт Excel</button>
+                <a href="GERON.HTML" class="btn-back"><i class="fas fa-arrow-left"></i> На сайт</a>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="price-table">
+    <thead>
+        <tr><th>Услуга</th><th>Описание</th><th>Цена</th></tr>
+    </thead>
+    <tbody id="priceBody">
+        <tr><td colspan="3" class="no-price">Загрузка...</td></tr>
+    </tbody>
+</table>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="copyright"><p>&copy; 2026 ГЕРОН-АВТО</p></div>
+        </div>
+    </footer>
+</div>
+
+<script>
+const API_BASE = 'api/';
+
+async function loadPriceList() {
+    const category = 'all';
+    const search = document.getElementById('searchInput').value;
+    
+    try {
+        const res = await fetch(`${API_BASE}price-list.php?category=${category}&search=${search}`);
+        const data = await res.json();
+        
+        if (data.success) {
+            
+            // Таблица
+            const tbody = document.getElementById('priceBody');
+                  if (data.items.length > 0) {
+                tbody.innerHTML = data.items.map(item => `
+                    <tr>
+                        <td>${esc(item.service_name)}</td>
+                        <td>${esc(item.description || '—')}</td>
+                        <td><span class="price-value">${Number(item.price).toLocaleString('ru-RU')} ₽</span></td>
+                    </tr>
+                `).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" class="no-price">Ничего не найдено</td></tr>';
+            }
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки прайс-листа:', e);
+    }
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function exportToExcel() {
+    const table = document.querySelector('.price-table');
+    const rows = table.querySelectorAll('tr');
+    let csv = '\uFEFF'; // BOM для русского
+    
+    rows.forEach(row => {
+        const cols = row.querySelectorAll('th, td');
+        const rowData = [];
+        cols.forEach(col => rowData.push('"' + (col.textContent || '').replace(/"/g, '""') + '"'));
+        csv += rowData.join(';') + '\n';
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'price-list-geron-auto.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+document.getElementById('searchInput').addEventListener('input', loadPriceList);
+
+loadPriceList();
+</script>
+</body>
+</html>
