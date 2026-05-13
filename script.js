@@ -5,16 +5,28 @@ const API_BASE = 'api/';
 
 const API = {
     async request(url, method = 'GET', data = null) {
-        const opts = { method, headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin' };
-        if (data && method !== 'GET') opts.body = JSON.stringify(data);
+        const opts = {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin'
+        };
+        if (data && method !== 'GET') {
+            opts.body = JSON.stringify(data);
+        }
+        
         const res = await fetch(API_BASE + url, opts);
         const text = await res.text();
+        
         try {
             const json = JSON.parse(text);
-            if (!res.ok) throw new Error(json.message || 'Ошибка сервера');
+            if (!res.ok) {
+                throw new Error(json.message || 'Ошибка сервера');
+            }
             return json;
         } catch (e) {
-            if (e.message !== 'Ошибка сервера') throw new Error('Сервер вернул HTML вместо JSON');
+            if (e.message !== 'Ошибка сервера') {
+                throw new Error('Сервер вернул HTML вместо JSON');
+            }
             throw e;
         }
     },
@@ -34,6 +46,7 @@ const API = {
     getMyReview: () => API.request('reviews.php?action=my'),
     updateReview: (data) => API.request('reviews.php?action=update', 'POST', data),
     submitVacancy: (data) => API.request('resume.php', 'POST', data),
+    checkAdmin: () => API.request('check-admin.php'),
 };
 
 const $ = (sel) => document.querySelector(sel);
@@ -51,85 +64,133 @@ function showToast(msg, type = 'info') {
 
 function openModal(id) {
     const m = document.getElementById(id);
-    if (m) { m.classList.add('active'); document.body.style.overflow = 'hidden'; }
-}
-function closeModal(id) {
-    const m = document.getElementById(id);
-    if (m) { m.classList.remove('active'); document.body.style.overflow = ''; }
+    if (m) {
+        m.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
-$$('.modal-close').forEach(b => b.addEventListener('click', () => closeModal(b.dataset.modal)));
-$$('.modal-overlay').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeModal(o.id); }));
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) {
+        m.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+$$('.modal-close').forEach(b => {
+    b.addEventListener('click', () => closeModal(b.dataset.modal));
+});
+
+$$('.modal-overlay').forEach(o => {
+    o.addEventListener('click', e => {
+        if (e.target === o) closeModal(o.id);
+    });
+});
+
+async function checkAdminAccess() {
+    try {
+        const res = await API.checkAdmin();
+        const link = $('#adminPanelLink');
+        if (link) {
+            link.style.display = res.isAdmin ? '' : 'none';
+        }
+    } catch (e) {
+        console.error('Ошибка проверки админа:', e);
+    }
+}
 
 function updateAuthUI() {
     const authNav = $('#authNav');
     const authBtns = $('#authButtons');
     const authMob = $('#authButtonsMobile');
     const authNavMob = $('#authNavMobile');
-    
+    const nameEl = $('#userName');
+    const nameMob = $('#userNameMobile');
+    const adminLink = $('#adminPanelLink');
+
     if (isLoggedIn && currentUser) {
         if (authNav) authNav.classList.add('active');
         if (authBtns) authBtns.style.display = 'none';
         if (authMob) authMob.classList.remove('show-mobile');
         if (authNavMob) authNavMob.classList.add('show-mobile');
-        const nameEl = $('#userName');
-        const nameMob = $('#userNameMobile');
         if (nameEl) nameEl.textContent = currentUser.name;
         if (nameMob) nameMob.textContent = currentUser.name;
+        checkAdminAccess();
     } else {
         if (authNav) authNav.classList.remove('active');
         if (authBtns) authBtns.style.display = 'flex';
         if (authMob) authMob.classList.add('show-mobile');
         if (authNavMob) authNavMob.classList.remove('show-mobile');
+        if (adminLink) adminLink.style.display = 'none';
     }
 }
 
 function showSection(id) {
-    const sections = {
-        '.hero': ['home'],
-        '.services': ['home', 'contacts'],
-        '.employees-slider': ['home'],
-        '.reviews-section': ['home', 'reviews'],
-        '.profile-section': ['profile'],
-        '#vacancies': ['vacancies'],
-        '#contacts': ['contacts'],
-    };
-    
-    for (const [sel, visible] of Object.entries(sections)) {
-        const el = $(sel);
-        if (el) el.style.display = visible.includes(id) ? '' : 'none';
+    const heroEl = $('.hero');
+    const servicesEl = $('.services');
+    const sliderEl = $('.employees-slider');
+    const reviewsEl = $('.reviews-section');
+    const profileEl = $('.profile-section');
+    const vacanciesEl = $('#vacancies');
+    const contactsEl = $('#contacts');
+
+    if (heroEl) heroEl.style.display = (id === 'home') ? '' : 'none';
+    if (sliderEl) sliderEl.style.display = (id === 'home') ? '' : 'none';
+    if (reviewsEl) reviewsEl.style.display = (id === 'home' || id === 'reviews') ? '' : 'none';
+    if (profileEl) profileEl.style.display = (id === 'profile') ? '' : 'none';
+    if (vacanciesEl) vacanciesEl.style.display = (id === 'vacancies') ? '' : 'none';
+    if (contactsEl) contactsEl.style.display = (id === 'contacts') ? '' : 'none';
+
+    if (servicesEl) {
+        if (id === 'vacancies') {
+            servicesEl.style.display = 'none';
+        } else {
+            servicesEl.style.display = (id === 'home' || id === 'contacts') ? '' : 'none';
+        }
     }
-    
-    if (id === 'vacancies') {
-        const svc = $('.services');
-        if (svc && svc.id !== 'contacts') svc.style.display = 'none';
-    }
-    
+
     $$('.nav-links a').forEach(l => {
         l.classList.remove('active');
-        if (l.getAttribute('href') === `#${id}`) l.classList.add('active');
+        if (l.getAttribute('href') === `#${id}`) {
+            l.classList.add('active');
+        }
     });
-    
-    if (id === 'profile' && isLoggedIn) loadProfileData();
+
+    if (id === 'profile' && isLoggedIn) {
+        loadProfileData();
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 const mobileBtn = $('#mobileMenuBtn');
-const navLinks = $('#navLinks');
+const navLinksEl = $('#navLinks');
+
 if (mobileBtn) {
     mobileBtn.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
+        navLinksEl.classList.toggle('active');
         const icon = mobileBtn.querySelector('i');
-        icon.className = navLinks.classList.contains('active') ? 'fas fa-times' : 'fas fa-bars';
+        if (icon) {
+            icon.className = navLinksEl.classList.contains('active') ? 'fas fa-times' : 'fas fa-bars';
+        }
     });
 }
-$$('.nav-links a').forEach(l => l.addEventListener('click', () => {
-    navLinks.classList.remove('active');
-    if (mobileBtn) mobileBtn.querySelector('i').className = 'fas fa-bars';
-}));
+
+$$('.nav-links a').forEach(l => {
+    l.addEventListener('click', () => {
+        navLinksEl.classList.remove('active');
+        if (mobileBtn) {
+            const icon = mobileBtn.querySelector('i');
+            if (icon) icon.className = 'fas fa-bars';
+        }
+    });
+});
 
 // Слайдер
-let currentSlide = 0, totalSlides = 0, slideTimer = null;
+let currentSlide = 0;
+let totalSlides = 0;
+let slideTimer = null;
 
 function goToSlide(i) {
     const slider = $('#slider');
@@ -138,36 +199,46 @@ function goToSlide(i) {
     if (i >= totalSlides) i = 0;
     currentSlide = i;
     slider.style.transform = `translateX(-${currentSlide * 100}%)`;
-    $$('.dot').forEach((d, idx) => d.classList.toggle('active', idx === currentSlide));
+    $$('.dot').forEach((d, idx) => {
+        d.classList.toggle('active', idx === currentSlide);
+    });
 }
-function startAutoSlide() { stopAutoSlide(); if (totalSlides > 0) slideTimer = setInterval(() => goToSlide(currentSlide + 1), 5000); }
-function stopAutoSlide() { clearInterval(slideTimer); }
+
+function startAutoSlide() {
+    stopAutoSlide();
+    if (totalSlides > 0) {
+        slideTimer = setInterval(() => goToSlide(currentSlide + 1), 5000);
+    }
+}
+
+function stopAutoSlide() {
+    clearInterval(slideTimer);
+}
 
 $('#prevBtn')?.addEventListener('click', () => goToSlide(currentSlide - 1));
 $('#nextBtn')?.addEventListener('click', () => goToSlide(currentSlide + 1));
 
-// Загрузка сотрудников
 async function loadEmployees() {
     try {
         const res = await API.request('employees.php');
-        if (res.success && res.employees?.length) {
+        if (res.success && res.employees && res.employees.length > 0) {
             const slider = $('#slider');
             if (!slider) return;
-            
             const gradients = ['#2d3f63', '#3d5a80', '#4a6fa5', '#5c80bc', '#6b8fc7', '#7a9ed0'];
-            
-            slider.innerHTML = res.employees.map((emp, i) => `
+            slider.innerHTML = res.employees.map((emp, i) => {
+                const initials = emp.name.split(' ').map(n => n.charAt(0)).join('');
+                const grad = gradients[i % gradients.length];
+                return `
                 <div class="slide">
-                    <div class="slide-img" style="background:linear-gradient(135deg,${gradients[i % gradients.length]},#1a2b4c);display:flex;align-items:center;justify-content:center;font-size:80px;color:rgba(255,255,255,0.1);font-family:'Font Awesome 6 Free';font-weight:900">
-                        ${emp.name.split(' ')[0].charAt(0)}${emp.name.split(' ')[1] ? emp.name.split(' ')[1].charAt(0) : ''}
+                    <div class="slide-img" style="background:linear-gradient(135deg,${grad},#1a2b4c);display:flex;align-items:center;justify-content:center;font-size:80px;color:rgba(255,255,255,0.1);font-family:'Font Awesome 6 Free';font-weight:900">
+                        ${initials}
                     </div>
                     <div class="slide-info">
                         <h3>${esc(emp.name)}</h3>
                         <p>${esc(emp.position)}${emp.experience ? ', ' + esc(emp.experience) + ' опыта' : ''}${emp.description ? '. ' + esc(emp.description) : ''}</p>
                     </div>
-                </div>
-            `).join('');
-            
+                </div>`;
+            }).join('');
             totalSlides = res.employees.length;
             currentSlide = 0;
             goToSlide(0);
@@ -193,14 +264,12 @@ function initSliderDots() {
     }
 }
 
-// Загрузка вакансий
 async function loadVacancies() {
     try {
         const res = await API.request('vacancies.php');
-        if (res.success && res.vacancies?.length) {
+        if (res.success && res.vacancies && res.vacancies.length > 0) {
             const grid = $('#vacanciesGrid');
             if (!grid) return;
-            
             grid.innerHTML = res.vacancies.map(v => `
                 <div class="vacancy-card" data-position="${esc(v.title)}">
                     <div class="vacancy-icon"><i class="fas ${esc(v.icon || 'fa-wrench')}"></i></div>
@@ -210,7 +279,6 @@ async function loadVacancies() {
                     <button class="btn btn-outline btn-select-vacancy">Выбрать</button>
                 </div>
             `).join('');
-            
             bindVacancyEvents();
         }
     } catch (e) {
@@ -224,6 +292,7 @@ function bindVacancyEvents() {
             e.preventDefault();
             e.stopPropagation();
             const card = this.closest('.vacancy-card');
+            if (!card) return;
             const pos = card.getAttribute('data-position');
             $$('.vacancy-card').forEach(c => c.classList.remove('selected'));
             card.classList.add('selected');
@@ -232,7 +301,7 @@ function bindVacancyEvents() {
             openModal('vacancyModal');
         });
     });
-    
+
     $$('.vacancy-card').forEach(card => {
         card.addEventListener('click', function(e) {
             if (e.target.classList.contains('btn-select-vacancy')) return;
@@ -254,7 +323,7 @@ function fillVacancyFromProfile() {
     }
 }
 
-// Формы
+// Форма входа
 $('#loginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -272,10 +341,15 @@ $('#loginForm')?.addEventListener('submit', async (e) => {
         } else {
             showToast(res.message || 'Ошибка входа', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Войти'; }
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Войти';
+    }
 });
 
+// Форма регистрации
 $('#registerForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -298,8 +372,12 @@ $('#registerForm')?.addEventListener('submit', async (e) => {
         } else {
             showToast(res.message || 'Ошибка', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Зарегистрироваться'; }
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Зарегистрироваться';
+    }
 });
 
 function showTestCode(code) {
@@ -336,8 +414,12 @@ $('#verifyEmailForm')?.addEventListener('submit', async (e) => {
         } else {
             showToast(vRes.message || 'Неверный код', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Подтвердить'; }
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Подтвердить';
+    }
 });
 
 $('#resendCode')?.addEventListener('click', async (e) => {
@@ -349,21 +431,28 @@ $('#resendCode')?.addEventListener('click', async (e) => {
             showToast('Код отправлен повторно', 'success');
             if (res.test_code) showTestCode(res.test_code);
         }
-    } catch (err) { showToast(err.message, 'error'); }
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 });
 
+// Форма заявки на ремонт
 $('#requestForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!isLoggedIn) { openModal('authModal'); showToast('Необходимо авторизоваться', 'error'); return; }
+    if (!isLoggedIn) {
+        openModal('authModal');
+        showToast('Необходимо авторизоваться', 'error');
+        return;
+    }
     const btn = e.target.querySelector('button');
     btn.disabled = true;
     btn.textContent = 'Отправка...';
     try {
         let photo = null;
-        const file = $('#requestPhoto')?.files[0];
-        if (file) {
+        const fileInput = $('#requestPhoto');
+        if (fileInput && fileInput.files[0]) {
             const fd = new FormData();
-            fd.append('file', file);
+            fd.append('file', fileInput.files[0]);
             fd.append('type', 'request');
             const upRes = await fetch(API_BASE + 'upload.php', { method: 'POST', body: fd }).then(r => r.json());
             if (upRes.success) photo = upRes.path;
@@ -374,7 +463,7 @@ $('#requestForm')?.addEventListener('submit', async (e) => {
             problem_description: $('#requestProblemDescription').value,
             preferred_date: $('#requestPreferredDate').value,
             phone: $('#requestPhone').value,
-            photo,
+            photo: photo,
         };
         const res = await API.createRequest(data);
         if (res.success) {
@@ -383,23 +472,42 @@ $('#requestForm')?.addEventListener('submit', async (e) => {
             e.target.reset();
             const preview = $('#requestPhotoPreview');
             if (preview) preview.innerHTML = '';
-            if ($('.profile-section')?.style.display !== 'none') loadRequests();
+            const profileSection = $('.profile-section');
+            if (profileSection && profileSection.style.display !== 'none') {
+                loadRequests();
+            }
         } else {
             showToast(res.message || 'Ошибка', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Отправить'; }
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить';
+    }
 });
 
+// Форма отзыва
 $('#reviewForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (!isLoggedIn) { openModal('authModal'); showToast('Необходимо авторизоваться', 'error'); return; }
+    if (!isLoggedIn) {
+        openModal('authModal');
+        showToast('Необходимо авторизоваться', 'error');
+        return;
+    }
     const btn = e.target.querySelector('button');
     btn.disabled = true;
     try {
         const ratingEl = document.querySelector('input[name="reviewRating"]:checked');
-        if (!ratingEl) { showToast('Выберите оценку', 'error'); btn.disabled = false; return; }
-        const res = await API.createReview({ rating: parseInt(ratingEl.value), comment: $('#reviewCommentNew').value });
+        if (!ratingEl) {
+            showToast('Выберите оценку', 'error');
+            btn.disabled = false;
+            return;
+        }
+        const res = await API.createReview({
+            rating: parseInt(ratingEl.value),
+            comment: $('#reviewCommentNew').value
+        });
         if (res.success) {
             closeModal('reviewModal');
             showToast('Отзыв добавлен', 'success');
@@ -408,20 +516,30 @@ $('#reviewForm')?.addEventListener('submit', async (e) => {
         } else {
             showToast(res.message || 'Ошибка', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; }
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+    }
 });
 
+// Форма профиля
 $('#profileForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
     btn.disabled = true;
     btn.textContent = 'Сохранение...';
     try {
-        const data = { name: $('#profileName').value, phone: $('#profilePhone').value };
-        const cp = $('#currentPassword').value;
-        const np = $('#newPassword').value;
-        if (cp || np) { data.current_password = cp; data.new_password = np; }
+        const data = {
+            name: $('#profileName').value,
+            phone: $('#profilePhone').value
+        };
+        const currentPass = $('#currentPassword').value;
+        const newPass = $('#newPassword').value;
+        if (currentPass || newPass) {
+            data.current_password = currentPass;
+            data.new_password = newPass;
+        }
         const res = await API.updateProfile(data);
         if (res.success) {
             showToast('Профиль обновлен', 'success');
@@ -432,16 +550,25 @@ $('#profileForm')?.addEventListener('submit', async (e) => {
         } else {
             showToast(res.message || 'Ошибка', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'Сохранить'; }
+    } catch (err) {
+        showToast(err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Сохранить';
+    }
 });
 
+// Форма отзыва в профиле
 $('#myReviewForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
         const ratingEl = document.querySelector('#myReviewForm input[name="rating"]:checked');
-        if (!ratingEl) { showToast('Выберите оценку', 'error'); return; }
-        const hasReview = (await API.getMyReview()).has_review;
+        if (!ratingEl) {
+            showToast('Выберите оценку', 'error');
+            return;
+        }
+        const myReviewRes = await API.getMyReview();
+        const hasReview = myReviewRes.has_review;
         const res = hasReview
             ? await API.updateReview({ rating: parseInt(ratingEl.value), comment: $('#reviewComment').value })
             : await API.createReview({ rating: parseInt(ratingEl.value), comment: $('#reviewComment').value });
@@ -451,9 +578,12 @@ $('#myReviewForm')?.addEventListener('submit', async (e) => {
         } else {
             showToast(res.message || 'Ошибка', 'error');
         }
-    } catch (err) { showToast(err.message, 'error'); }
+    } catch (err) {
+        showToast(err.message, 'error');
+    }
 });
 
+// Форма вакансии
 $('#vacancyForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
@@ -488,7 +618,7 @@ $('#vacancyForm')?.addEventListener('submit', async (e) => {
             showToast(res.message || 'Ошибка отправки', 'error');
         }
     } catch (err) {
-        console.error('ОШИБКА ВАКАНСИИ:', err);
+        console.error('Ошибка вакансии:', err);
         showToast(err.message || 'Ошибка соединения с сервером', 'error');
     } finally {
         btn.disabled = false;
@@ -496,7 +626,7 @@ $('#vacancyForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Загрузка данных профиля
+// Загрузка данных
 async function loadProfileData() {
     if (!isLoggedIn) return;
     try {
@@ -512,7 +642,9 @@ async function loadProfileData() {
             loadRequests();
             loadMyReview();
         }
-    } catch (e) { showToast('Ошибка загрузки профиля', 'error'); }
+    } catch (e) {
+        showToast('Ошибка загрузки профиля', 'error');
+    }
 }
 
 async function loadRequests() {
@@ -520,25 +652,34 @@ async function loadRequests() {
     if (!list) return;
     try {
         const res = await API.getMyRequests();
-        if (res.success && res.requests?.length) {
-            list.innerHTML = res.requests.map(r => `
+        if (res.success && res.requests && res.requests.length > 0) {
+            list.innerHTML = res.requests.map(r => {
+                let extraInfo = '';
+                if (r.repair_date) {
+                    extraInfo += `<div class="request-date"><i class="fas fa-tools"></i> Ремонт: ${formatDate(r.repair_date)} ${r.repair_time || ''}</div>`;
+                }
+                if (r.admin_comment) {
+                    extraInfo += `<div class="request-date"><i class="fas fa-comment"></i> ${esc(r.admin_comment)}</div>`;
+                }
+                return `
                 <div class="request-card">
                     <div class="request-info">
                         <div class="request-id">Заявка #${r.id}</div>
                         <div class="request-service">${esc(r.service_type)}</div>
                         <div class="request-vehicle">${esc(r.vehicle_model)}</div>
                         <div class="request-date"><i class="far fa-calendar"></i> ${formatDate(r.preferred_date)}</div>
-                        ${r.repair_date ? `<div class="request-date"><i class="fas fa-tools"></i> Ремонт: ${formatDate(r.repair_date)} ${r.repair_time || ''}</div>` : ''}
-                        ${r.admin_comment ? `<div class="request-date"><i class="fas fa-comment"></i> ${esc(r.admin_comment)}</div>` : ''}
+                        ${extraInfo}
                     </div>
                     <div class="request-status status-${r.status}">${statusText(r.status)}</div>
                     ${r.status === 'new' ? `<button class="btn btn-secondary btn-small" onclick="cancelRequest(${r.id})">Отменить</button>` : ''}
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         } else {
             list.innerHTML = '<div class="no-reviews">У вас пока нет заявок</div>';
         }
-    } catch (e) { list.innerHTML = '<div class="no-reviews">Ошибка загрузки</div>'; }
+    } catch (e) {
+        list.innerHTML = '<div class="no-reviews">Ошибка загрузки</div>';
+    }
 }
 
 async function loadReviews() {
@@ -549,21 +690,27 @@ async function loadReviews() {
         if (res.success) {
             $('#averageRatingText').textContent = res.average_rating || '0.0';
             $('#totalReviews').textContent = res.total_reviews || 0;
-            const stars = '★'.repeat(Math.floor(res.average_rating || 0)) + '☆'.repeat(5 - Math.floor(res.average_rating || 0));
-            $('#averageStars').innerHTML = `<span style="color:#ffc107">${stars}</span>`;
-            if (res.reviews?.length) {
+            const fullStars = Math.floor(res.average_rating || 0);
+            const starsHtml = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+            $('#averageStars').innerHTML = `<span style="color:#ffc107">${starsHtml}</span>`;
+            if (res.reviews && res.reviews.length > 0) {
                 grid.innerHTML = res.reviews.map(r => `
                     <div class="review-card">
-                        <div class="review-header"><span class="review-author">${esc(r.user_name)}</span><span class="review-date">${r.date_formatted}</span></div>
+                        <div class="review-header">
+                            <span class="review-author">${esc(r.user_name)}</span>
+                            <span class="review-date">${r.date_formatted}</span>
+                        </div>
                         <div class="review-rating">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
                         <div class="review-text">${esc(r.comment)}</div>
                     </div>
                 `).join('');
             } else {
-                grid.innerHTML = '<div class="no-reviews">Пока нет отзывов</div>';
+                grid.innerHTML = '<div class="no-reviews">Пока нет отзывов. Будьте первым!</div>';
             }
         }
-    } catch (e) { grid.innerHTML = '<div class="no-reviews">Ошибка загрузки</div>'; }
+    } catch (e) {
+        grid.innerHTML = '<div class="no-reviews">Ошибка загрузки отзывов</div>';
+    }
 }
 
 async function loadMyReview() {
@@ -577,34 +724,68 @@ async function loadMyReview() {
         } else {
             $$('#myReviewForm input[name="rating"]').forEach(r => r.checked = false);
             $('#reviewComment').value = '';
-            $('#saveReviewBtn').innerHTML = '<i class="fas fa-save"></i> Сохранить';
+            $('#saveReviewBtn').innerHTML = '<i class="fas fa-save"></i> Сохранить отзыв';
         }
-    } catch (e) {}
+    } catch (e) {
+        console.error('Ошибка загрузки отзыва:', e);
+    }
 }
 
 async function cancelRequest(id) {
-    if (!confirm('Отменить заявку?')) return;
+    if (!confirm('Вы уверены, что хотите отменить заявку?')) return;
     try {
-        await API.cancelRequest(id);
-        showToast('Заявка отменена', 'success');
-        loadRequests();
-    } catch (e) { showToast(e.message, 'error'); }
+        const res = await API.cancelRequest(id);
+        if (res.success) {
+            showToast('Заявка отменена', 'success');
+            loadRequests();
+        }
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 }
 
-function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-function formatDate(d) { return d ? new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }) : ''; }
-function statusText(s) { return { new: 'Новая', in_progress: 'В работе', completed: 'Выполнена', cancelled: 'Отменена' }[s] || s; }
+function esc(s) {
+    if (!s) return '';
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
 
+function formatDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('ru-RU', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+}
+
+function statusText(s) {
+    const statuses = {
+        'new': 'Новая',
+        'in_progress': 'В работе',
+        'completed': 'Выполнена',
+        'cancelled': 'Отменена'
+    };
+    return statuses[s] || s;
+}
+
+// Превью фото
 $('#requestPhoto')?.addEventListener('change', function() {
     const file = this.files[0];
     const preview = $('#requestPhotoPreview');
-    if (!file?.type.startsWith('image/')) return;
-    if (file.size > 5 * 1024 * 1024) { showToast('Максимум 5 МБ', 'error'); return; }
+    if (!file || !file.type.startsWith('image/')) return;
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('Размер файла не должен превышать 5 МБ', 'error');
+        return;
+    }
     const reader = new FileReader();
-    reader.onload = e => {
+    reader.onload = function(e) {
         preview.innerHTML = `
             <div class="file-info">
-                <i class="fas fa-image"></i> <span>${file.name}</span> <small>(${(file.size/1024).toFixed(1)} КБ)</small>
+                <i class="fas fa-image"></i>
+                <span>${file.name}</span>
+                <small>(${(file.size / 1024).toFixed(1)} КБ)</small>
                 <button class="remove-file" onclick="removePhoto()"><i class="fas fa-times"></i> Удалить</button>
             </div>
             <img src="${e.target.result}" alt="Preview">
@@ -628,13 +809,18 @@ function openAuthModal(mode = 'login') {
 function setAuthMode(mode) {
     const toggle = $('#modalAuthToggle');
     if (toggle) toggle.dataset.active = mode;
-    $$('.auth-toggle-option').forEach(o => o.classList.toggle('active', o.dataset.action === mode));
-    $('#authModalTitle').textContent = mode === 'login' ? 'Вход' : 'Регистрация';
-    $('#loginForm').classList.toggle('active', mode === 'login');
-    $('#registerForm').classList.toggle('active', mode === 'register');
+    $$('.auth-toggle-option').forEach(o => {
+        o.classList.toggle('active', o.dataset.action === mode);
+    });
+    const title = $('#authModalTitle');
+    if (title) title.textContent = mode === 'login' ? 'Вход' : 'Регистрация';
+    const loginForm = $('#loginForm');
+    const registerForm = $('#registerForm');
+    if (loginForm) loginForm.classList.toggle('active', mode === 'login');
+    if (registerForm) registerForm.classList.toggle('active', mode === 'register');
 }
 
-$('#modalAuthToggle')?.addEventListener('click', e => {
+$('#modalAuthToggle')?.addEventListener('click', (e) => {
     const opt = e.target.closest('.auth-toggle-option');
     if (opt) setAuthMode(opt.dataset.action);
 });
@@ -642,7 +828,14 @@ $('#modalAuthToggle')?.addEventListener('click', e => {
 $('#loginBtnNav')?.addEventListener('click', () => openAuthModal('login'));
 $('#registerBtnNav')?.addEventListener('click', () => openAuthModal('register'));
 $('#authActionBtnMobile')?.addEventListener('click', () => openAuthModal('login'));
-$('#userName')?.addEventListener('click', () => isLoggedIn ? showSection('profile') : openAuthModal('login'));
+
+$('#userName')?.addEventListener('click', () => {
+    if (isLoggedIn) {
+        showSection('profile');
+    } else {
+        openAuthModal('login');
+    }
+});
 
 async function handleLogout() {
     try {
@@ -652,40 +845,91 @@ async function handleLogout() {
         updateAuthUI();
         showSection('home');
         showToast('Выход выполнен', 'success');
-    } catch (e) { showToast(e.message, 'error'); }
+    } catch (e) {
+        showToast(e.message, 'error');
+    }
 }
 
 $$('.btn-logout-mobile').forEach(b => b?.addEventListener('click', handleLogout));
 $('#logoutBtnProfile')?.addEventListener('click', handleLogout);
 
-$('#openRequestModal')?.addEventListener('click', () => isLoggedIn ? openModal('requestModal') : openAuthModal('login'));
-$('#openRequestModalProfile')?.addEventListener('click', () => openModal('requestModal'));
-$('#openReviewModal')?.addEventListener('click', () => isLoggedIn ? openModal('reviewModal') : openAuthModal('login'));
-
-$$('.btn-request').forEach(b => b.addEventListener('click', () => {
+$('#openRequestModal')?.addEventListener('click', () => {
     if (isLoggedIn) {
-        const sel = $('#requestServiceType');
-        if (sel) sel.value = b.dataset.service;
         openModal('requestModal');
-    } else { openAuthModal('login'); showToast('Авторизуйтесь', 'error'); }
-}));
+    } else {
+        openAuthModal('login');
+    }
+});
 
-$$('.nav-links a').forEach(a => a.addEventListener('click', function(e) {
-    const href = this.getAttribute('href');
-    e.preventDefault();
-    if (href === '#') showSection('home');
-    else if (href === '#profile') isLoggedIn ? showSection('profile') : openAuthModal('login');
-    else if (href === '#reviews') showSection('reviews');
-    else if (href === '#contacts') showSection('contacts');
-    else if (href === '#vacancies') showSection('vacancies');
-}));
+$('#openRequestModalProfile')?.addEventListener('click', () => openModal('requestModal'));
 
-$$('.profile-tab').forEach(t => t.addEventListener('click', () => {
-    $$('.profile-tab').forEach(t2 => t2.classList.remove('active'));
-    t.classList.add('active');
-    $$('.profile-content').forEach(c => c.classList.remove('active'));
-    $(`#${t.dataset.tab}Tab`)?.classList.add('active');
-}));
+$('#openReviewModal')?.addEventListener('click', () => {
+    if (isLoggedIn) {
+        openModal('reviewModal');
+    } else {
+        openAuthModal('login');
+    }
+});
+
+$$('.btn-request').forEach(b => {
+    b.addEventListener('click', () => {
+        if (isLoggedIn) {
+            const sel = $('#requestServiceType');
+            if (sel && b.dataset.service) {
+                sel.value = b.dataset.service;
+            }
+            openModal('requestModal');
+        } else {
+            openAuthModal('login');
+            showToast('Необходимо авторизоваться', 'error');
+        }
+    });
+});
+
+// Навигация по ссылкам — ИСПРАВЛЕНО
+$$('.nav-links a').forEach(a => {
+    a.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        
+        // Пропускаем ссылки на админку и другие внешние ссылки
+        if (!href || href === '#services') {
+            // Просто скроллим к услугам
+            return;
+        }
+        if (href.startsWith('admin/') || href.startsWith('http')) {
+            return;
+        }
+        
+        e.preventDefault();
+        
+        if (href === '#') {
+            showSection('home');
+        } else if (href === '#profile') {
+            if (isLoggedIn) {
+                showSection('profile');
+            } else {
+                openAuthModal('login');
+            }
+        } else if (href === '#reviews') {
+            showSection('reviews');
+        } else if (href === '#contacts') {
+            showSection('contacts');
+        } else if (href === '#vacancies') {
+            showSection('vacancies');
+        }
+    });
+});
+
+$$('.profile-tab').forEach(t => {
+    t.addEventListener('click', () => {
+        $$('.profile-tab').forEach(t2 => t2.classList.remove('active'));
+        t.classList.add('active');
+        $$('.profile-content').forEach(c => c.classList.remove('active'));
+        const tabId = t.dataset.tab;
+        const content = $(`#${tabId}Tab`);
+        if (content) content.classList.add('active');
+    });
+});
 
 function setMinDates() {
     const today = new Date().toISOString().split('T')[0];
@@ -697,15 +941,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     setMinDates();
     await loadEmployees();
     await loadVacancies();
+
     try {
         const auth = await API.checkAuth();
         if (auth.loggedIn && auth.user) {
             isLoggedIn = true;
             currentUser = auth.user;
         }
-    } catch (e) {}
+    } catch (e) {
+        console.error('Ошибка проверки авторизации:', e);
+    }
+
     updateAuthUI();
     loadReviews();
+
     const vac = $('#vacancies');
     if (vac) vac.style.display = 'none';
 });

@@ -26,6 +26,7 @@
                 <li><a href="#reviews">Отзывы</a></li>
                 <li><a href="#vacancies">Вакансии</a></li>
                 <li><a href="#contacts">Контакты</a></li>
+                <li><a href="admin/index.php" class="admin-link" id="adminPanelLink" style="display:none"><i class="fas fa-shield-alt"></i> Админ</a></li>
                 <li class="auth-buttons-mobile" id="authButtonsMobile">
                     <button class="btn btn-auth-primary" id="authActionBtnMobile">Войти</button>
                 </li>
@@ -234,13 +235,9 @@
     </div>
 </footer>
 
-<!-- Модальные окна -->
 <div class="modal-overlay" id="authModal">
     <div class="modal">
-        <div class="modal-header">
-            <h2 id="authModalTitle">Вход</h2>
-            <button class="modal-close" data-modal="authModal">&times;</button>
-        </div>
+        <div class="modal-header"><h2 id="authModalTitle">Вход</h2><button class="modal-close" data-modal="authModal">&times;</button></div>
         <div class="modal-body">
             <div class="auth-toggle-container">
                 <div class="auth-toggle-slider" id="modalAuthToggle">
@@ -269,28 +266,12 @@
         <div class="modal-header"><h2>Заявка на ремонт</h2><button class="modal-close" data-modal="requestModal">&times;</button></div>
         <div class="modal-body">
             <form id="requestForm">
-                <div class="form-group">
-                    <label>Тип услуги</label>
-                    <select id="requestServiceType" required>
-                        <option value="">Выберите услугу</option>
-                        <option>Ремонт грузовых авто</option>
-                        <option>Ремонт прицепов</option>
-                        <option>Диагностика</option>
-                        <option>Другое</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>Тип услуги</label><select id="requestServiceType" required><option value="">Выберите услугу</option><option>Ремонт грузовых авто</option><option>Ремонт прицепов</option><option>Диагностика</option><option>Другое</option></select></div>
                 <div class="form-group"><label>Модель автомобиля</label><input type="text" id="requestVehicleModel" placeholder="Например: Volvo FH16" required></div>
                 <div class="form-group"><label>Описание проблемы</label><textarea id="requestProblemDescription" rows="4" placeholder="Опишите, что случилось..." required></textarea></div>
                 <div class="form-group"><label>Дата</label><input type="date" id="requestPreferredDate" required></div>
                 <div class="form-group"><label>Телефон</label><input type="tel" id="requestPhone" placeholder="+7 (___) ___-__-__" required></div>
-                <div class="form-group">
-                    <label>Фото <span class="badge-optional">НЕ ОБЯЗАТЕЛЬНО</span></label>
-                    <label class="file-upload-label">
-                        <input type="file" id="requestPhoto" accept="image/*" style="display:none">
-                        <div class="file-upload-box"><i class="fas fa-camera"></i><span>Добавить фото</span><small>JPG, PNG, GIF (макс. 5 МБ)</small></div>
-                    </label>
-                    <div id="requestPhotoPreview" class="file-preview"></div>
-                </div>
+                <div class="form-group"><label>Фото <span class="badge-optional">НЕ ОБЯЗАТЕЛЬНО</span></label><label class="file-upload-label"><input type="file" id="requestPhoto" accept="image/*" style="display:none"><div class="file-upload-box"><i class="fas fa-camera"></i><span>Добавить фото</span><small>JPG, PNG, GIF (макс. 5 МБ)</small></div></label><div id="requestPhotoPreview" class="file-preview"></div></div>
                 <button type="submit" class="btn btn-primary btn-block">Отправить</button>
             </form>
         </div>
@@ -302,16 +283,7 @@
         <div class="modal-header"><h2>Оставить отзыв</h2><button class="modal-close" data-modal="reviewModal">&times;</button></div>
         <div class="modal-body">
             <form id="reviewForm">
-                <div class="form-group">
-                    <label>Оценка</label>
-                    <div class="rating-input">
-                        <input type="radio" name="reviewRating" id="reviewStar5" value="5" required><label for="reviewStar5">★</label>
-                        <input type="radio" name="reviewRating" id="reviewStar4" value="4"><label for="reviewStar4">★</label>
-                        <input type="radio" name="reviewRating" id="reviewStar3" value="3"><label for="reviewStar3">★</label>
-                        <input type="radio" name="reviewRating" id="reviewStar2" value="2"><label for="reviewStar2">★</label>
-                        <input type="radio" name="reviewRating" id="reviewStar1" value="1"><label for="reviewStar1">★</label>
-                    </div>
-                </div>
+                <div class="form-group"><label>Оценка</label><div class="rating-input"><input type="radio" name="reviewRating" id="reviewStar5" value="5" required><label for="reviewStar5">★</label><input type="radio" name="reviewRating" id="reviewStar4" value="4"><label for="reviewStar4">★</label><input type="radio" name="reviewRating" id="reviewStar3" value="3"><label for="reviewStar3">★</label><input type="radio" name="reviewRating" id="reviewStar2" value="2"><label for="reviewStar2">★</label><input type="radio" name="reviewRating" id="reviewStar1" value="1"><label for="reviewStar1">★</label></div></div>
                 <div class="form-group"><label>Текст отзыва</label><textarea id="reviewCommentNew" rows="5" required></textarea></div>
                 <button type="submit" class="btn btn-primary btn-block">Отправить</button>
             </form>
@@ -328,29 +300,7 @@
                 <div class="form-group"><label>ФИО *</label><input type="text" id="vacancyFullName" required></div>
                 <div class="form-group"><label>Телефон *</label><input type="tel" id="vacancyPhone" required></div>
                 <div class="form-group"><label>Email *</label><input type="email" id="vacancyEmail" required></div>
-                <div class="form-group">
-                    <label>Удобное время для звонка</label>
-                    <select id="vacancyCallTime">
-                        <option value="">Выберите время</option>
-                        <option value="10:00">10:00</option>
-                        <option value="10:30">10:30</option>
-                        <option value="11:00">11:00</option>
-                        <option value="11:30">11:30</option>
-                        <option value="12:00">12:00</option>
-                        <option value="12:30">12:30</option>
-                        <option value="13:00">13:00</option>
-                        <option value="13:30">13:30</option>
-                        <option value="14:00">14:00</option>
-                        <option value="14:30">14:30</option>
-                        <option value="15:00">15:00</option>
-                        <option value="15:30">15:30</option>
-                        <option value="16:00">16:00</option>
-                        <option value="16:30">16:30</option>
-                        <option value="17:00">17:00</option>
-                        <option value="17:30">17:30</option>
-                        <option value="18:00">18:00</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>Удобное время для звонка</label><select id="vacancyCallTime"><option value="">Выберите время</option><option value="10:00">10:00</option><option value="10:30">10:30</option><option value="11:00">11:00</option><option value="11:30">11:30</option><option value="12:00">12:00</option><option value="12:30">12:30</option><option value="13:00">13:00</option><option value="13:30">13:30</option><option value="14:00">14:00</option><option value="14:30">14:30</option><option value="15:00">15:00</option><option value="15:30">15:30</option><option value="16:00">16:00</option><option value="16:30">16:30</option><option value="17:00">17:00</option><option value="17:30">17:30</option><option value="18:00">18:00</option></select></div>
                 <div class="form-group"><label>Возраст</label><input type="number" id="vacancyAge" min="18" max="70"></div>
                 <div class="form-group"><label>Опыт работы</label><textarea id="vacancyExperience" rows="3"></textarea></div>
                 <div class="form-group"><label>Комментарий</label><textarea id="vacancyComment" rows="3"></textarea></div>
@@ -365,10 +315,7 @@
         <div class="modal-header"><h2>Подтверждение email</h2><button class="modal-close" data-modal="verifyEmailModal">&times;</button></div>
         <div class="modal-body">
             <p>Введите код из письма, отправленного на <strong id="verifyEmailText"></strong></p>
-            <form id="verifyEmailForm">
-                <div class="form-group"><label>Код</label><input type="text" id="verifyCode" maxlength="6" pattern="[0-9]{6}" required style="text-align:center;font-size:24px;letter-spacing:10px"></div>
-                <button type="submit" class="btn btn-primary btn-block">Подтвердить</button>
-            </form>
+            <form id="verifyEmailForm"><div class="form-group"><label>Код</label><input type="text" id="verifyCode" maxlength="6" pattern="[0-9]{6}" required style="text-align:center;font-size:24px;letter-spacing:10px"></div><button type="submit" class="btn btn-primary btn-block">Подтвердить</button></form>
             <p style="text-align:center;margin-top:15px;font-size:14px">Не пришло письмо? <a href="#" id="resendCode" style="color:#ff6b35">Отправить повторно</a></p>
         </div>
     </div>

@@ -7,25 +7,30 @@ if (isAdmin()) {
 }
 
 $error = '';
+$username = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
-    
+
     if (empty($username) || empty($password)) {
         $error = 'Заполните все поля';
     } else {
         $pdo = getDB();
-        $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
-        $stmt->execute([$username]);
-        $admin = $stmt->fetch();
-        
-        if ($admin && password_verify($password, $admin['password'])) {
-            $_SESSION['admin_id'] = $admin['id'];
-            header('Location: index.php');
-            exit;
+        if (!$pdo) {
+            $error = 'Ошибка подключения к базе данных';
         } else {
-            $error = 'Неверный логин или пароль';
+            $stmt = $pdo->prepare("SELECT * FROM admins WHERE username = ?");
+            $stmt->execute([$username]);
+            $admin = $stmt->fetch();
+
+            if ($admin && password_verify($password, $admin['password'])) {
+                $_SESSION['admin_id'] = $admin['id'];
+                header('Location: index.php');
+                exit;
+            } else {
+                $error = 'Неверный логин или пароль';
+            }
         }
     }
 }
@@ -47,13 +52,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h1>ГЕРОН-<span>АВТО</span></h1>
                 <p>Админ-панель</p>
             </div>
+
             <?php if ($error): ?>
                 <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
             <?php endif; ?>
-            <form method="POST">
+
+            <form method="POST" novalidate>
                 <div class="form-group">
                     <label><i class="fas fa-user"></i> Логин</label>
-                    <input type="text" name="username" value="<?= htmlspecialchars($username ?? '') ?>" required autofocus>
+                    <input type="text" name="username" value="<?= htmlspecialchars($username) ?>" required autofocus autocomplete="off">
                 </div>
                 <div class="form-group">
                     <label><i class="fas fa-lock"></i> Пароль</label>
@@ -61,6 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <button type="submit" class="btn btn-primary btn-block">Войти</button>
             </form>
+
+            <div style="text-align:center;margin-top:20px">
+                <a href="../GERON.HTML" style="color:#ff6b35;text-decoration:none;font-size:14px">
+                    <i class="fas fa-arrow-left"></i> Вернуться на сайт
+                </a>
+            </div>
         </div>
     </div>
 </body>
