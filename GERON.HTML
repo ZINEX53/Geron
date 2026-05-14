@@ -56,6 +56,18 @@
         </div>
     </section>
 
+    <section class="news-section" id="news-section">
+    <div class="container">
+        <h2 class="section-title">Новости</h2>
+        <div class="news-grid" id="newsGrid">
+            <div class="no-reviews">Загрузка новостей...</div>
+        </div>
+        <div style="text-align:center;margin-top:30px">
+            <a href="news.html" class="btn btn-outline">Все новости <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+</section>
+
     <section class="services" id="services">
         <div class="container">
             <h2 class="section-title">Наши услуги</h2>
@@ -322,5 +334,20 @@
 </div>
 
 <script src="script.js"></script>
+
+<div class="modal-overlay" id="imageModal" style="display:none" onclick="closeImageModal()">
+    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <img id="imageModalImg" src="" alt="Просмотр изображения" onclick="event.stopPropagation()">
+</div>
+
+<div class="modal-overlay" id="newsModal" style="display:none">
+    <div class="modal" style="max-width:700px">
+        <div class="modal-header">
+            <h3>Новость</h3>
+            <span onclick="closeNewsModal()" style="cursor:pointer;font-size:28px;line-height:1;color:#999">&times;</span>
+        </div>
+        <div class="modal-body" id="newsModalBody"></div>
+    </div>
+</div>
 </body>
 </html>

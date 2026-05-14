@@ -276,3 +276,40 @@ html, body { overflow-x: hidden; max-width: 100%; }
     footer { padding-bottom: env(safe-area-inset-bottom); }
     .toast { bottom: max(20px, env(safe-area-inset-bottom)); }
 }
+.news-section { padding: 60px 0; background: #f8f9fa; }
+.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+.news-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: 0.3s; }
+.news-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.12); }
+.news-card-img { width: 100%; height: 200px; object-fit: cover; background: #e0e0e0; }
+.news-card-body { padding: 20px; }
+.news-card-body h3 { color: #1a2b4c; margin-bottom: 10px; font-size: 18px; }
+.news-card-body .news-text {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.news-card-body .read-more {
+    color: #ff6b35;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-block;
+}
+.news-card-body .read-more:hover { text-decoration: underline; }
+.news-card-date { color: #999; font-size: 12px; margin-top: 10px; }
+.news-modal-text { white-space: pre-line; word-wrap: break-word; }
+.news-modal-date i { color: #ff6b35; margin-right: 5px; }
+.news-card-img-link { display: block; cursor: pointer; overflow: hidden; }
+.news-card-img-link img { width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s; }
+.news-card-img-link:hover img { transform: scale(1.05); }
+#imageModal { z-index: 3000; align-items: center; justify-content: center; }
+#imageModal img { max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); cursor: default; }
+.image-modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; z-index: 3001; transition: 0.3s; }
+.image-modal-close:hover { color: #ff6b35; }

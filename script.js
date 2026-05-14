@@ -13,10 +13,10 @@ const API = {
         if (data && method !== 'GET') {
             opts.body = JSON.stringify(data);
         }
-        
+
         const res = await fetch(API_BASE + url, opts);
         const text = await res.text();
-        
+
         try {
             const json = JSON.parse(text);
             if (!res.ok) {
@@ -52,6 +52,7 @@ const API = {
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+// ==================== TOAST ====================
 function showToast(msg, type = 'info') {
     const old = $('.toast');
     if (old) old.remove();
@@ -62,6 +63,7 @@ function showToast(msg, type = 'info') {
     setTimeout(() => toast.remove(), 4000);
 }
 
+// ==================== МОДАЛКИ ====================
 function openModal(id) {
     const m = document.getElementById(id);
     if (m) {
@@ -88,6 +90,7 @@ $$('.modal-overlay').forEach(o => {
     });
 });
 
+// ==================== ПРОВЕРКА АДМИНА ====================
 async function checkAdminAccess() {
     try {
         const res = await API.checkAdmin();
@@ -100,6 +103,7 @@ async function checkAdminAccess() {
     }
 }
 
+// ==================== UI АВТОРИЗАЦИИ ====================
 function updateAuthUI() {
     const authNav = $('#authNav');
     const authBtns = $('#authButtons');
@@ -126,6 +130,7 @@ function updateAuthUI() {
     }
 }
 
+// ==================== НАВИГАЦИЯ ПО СЕКЦИЯМ ====================
 function showSection(id) {
     const heroEl = $('.hero');
     const servicesEl = $('.services');
@@ -134,30 +139,30 @@ function showSection(id) {
     const profileEl = $('.profile-section');
     const vacanciesEl = $('#vacancies');
     const contactsEl = $('#contacts');
+    const newsSection = $('#news-section');
 
-    // Скрываем всё
     if (heroEl) heroEl.style.display = 'none';
     if (sliderEl) sliderEl.style.display = 'none';
     if (reviewsEl) reviewsEl.style.display = 'none';
     if (profileEl) profileEl.style.display = 'none';
     if (vacanciesEl) vacanciesEl.style.display = 'none';
     if (contactsEl) contactsEl.style.display = 'none';
+    if (newsSection) newsSection.style.display = 'none';
 
-    // Скрываем все блоки услуг
     const allServices = document.querySelectorAll('.services');
     allServices.forEach(el => el.style.display = 'none');
 
-    // Показываем нужное
     if (id === 'home') {
         if (heroEl) heroEl.style.display = '';
         if (sliderEl) sliderEl.style.display = '';
         if (reviewsEl) reviewsEl.style.display = '';
+        if (newsSection) newsSection.style.display = '';
         allServices.forEach(el => el.style.display = '');
     } else if (id === 'services') {
-        const servicesSection = document.querySelector('#services');
-        if (servicesSection) servicesSection.style.display = '';
-        const contactsSection = document.querySelector('#contacts');
-        if (contactsSection) contactsSection.style.display = '';
+        const svc = document.querySelector('#services');
+        if (svc) svc.style.display = '';
+        const ctc = document.querySelector('#contacts');
+        if (ctc) ctc.style.display = '';
     } else if (id === 'reviews') {
         if (reviewsEl) reviewsEl.style.display = '';
     } else if (id === 'profile') {
@@ -166,11 +171,10 @@ function showSection(id) {
     } else if (id === 'vacancies') {
         if (vacanciesEl) vacanciesEl.style.display = '';
     } else if (id === 'contacts') {
-        const contactsSection = document.querySelector('#contacts');
-        if (contactsSection) contactsSection.style.display = '';
+        const ctc = document.querySelector('#contacts');
+        if (ctc) ctc.style.display = '';
     }
 
-    // Активный пункт меню
     $$('.nav-links a').forEach(l => {
         l.classList.remove('active');
         if (l.getAttribute('href') === `#${id}`) l.classList.add('active');
@@ -180,7 +184,7 @@ function showSection(id) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-
+// ==================== МОБИЛЬНОЕ МЕНЮ ====================
 const mobileBtn = $('#mobileMenuBtn');
 const navLinksEl = $('#navLinks');
 
@@ -204,7 +208,7 @@ $$('.nav-links a').forEach(l => {
     });
 });
 
-// Слайдер
+// ==================== СЛАЙДЕР ====================
 let currentSlide = 0;
 let totalSlides = 0;
 let slideTimer = null;
@@ -235,6 +239,7 @@ function stopAutoSlide() {
 $('#prevBtn')?.addEventListener('click', () => goToSlide(currentSlide - 1));
 $('#nextBtn')?.addEventListener('click', () => goToSlide(currentSlide + 1));
 
+// ==================== ЗАГРУЗКА СОТРУДНИКОВ ====================
 async function loadEmployees() {
     try {
         const res = await API.request('employees.php');
@@ -281,6 +286,7 @@ function initSliderDots() {
     }
 }
 
+// ==================== ЗАГРУЗКА ВАКАНСИЙ ====================
 async function loadVacancies() {
     try {
         const res = await API.request('vacancies.php');
@@ -340,7 +346,7 @@ function fillVacancyFromProfile() {
     }
 }
 
-// Форма входа
+// ==================== ФОРМА ВХОДА ====================
 $('#loginForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -366,7 +372,7 @@ $('#loginForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Форма регистрации
+// ==================== ФОРМА РЕГИСТРАЦИИ ====================
 $('#registerForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -407,6 +413,7 @@ function showTestCode(code) {
     $('#verifyEmailForm').prepend(div);
 }
 
+// ==================== ПОДТВЕРЖДЕНИЕ EMAIL ====================
 $('#verifyEmailForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -416,7 +423,13 @@ $('#verifyEmailForm')?.addEventListener('submit', async (e) => {
         const vRes = await API.verifyCode(pendingRegistration.email, $('#verifyCode').value);
         if (vRes.success) {
             btn.textContent = 'Регистрация...';
-            const regRes = await API.register(pendingRegistration.name, pendingRegistration.email, pendingRegistration.phone, pendingRegistration.password, true);
+            const regRes = await API.register(
+                pendingRegistration.name,
+                pendingRegistration.email,
+                pendingRegistration.phone,
+                pendingRegistration.password,
+                true
+            );
             if (regRes.success) {
                 isLoggedIn = true;
                 currentUser = regRes.user;
@@ -453,7 +466,7 @@ $('#resendCode')?.addEventListener('click', async (e) => {
     }
 });
 
-// Форма заявки на ремонт
+// ==================== ФОРМА ЗАЯВКИ НА РЕМОНТ ====================
 $('#requestForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -471,7 +484,10 @@ $('#requestForm')?.addEventListener('submit', async (e) => {
             const fd = new FormData();
             fd.append('file', fileInput.files[0]);
             fd.append('type', 'request');
-            const upRes = await fetch(API_BASE + 'upload.php', { method: 'POST', body: fd }).then(r => r.json());
+            const upRes = await fetch(API_BASE + 'upload.php', {
+                method: 'POST',
+                body: fd
+            }).then(r => r.json());
             if (upRes.success) photo = upRes.path;
         }
         const data = {
@@ -504,7 +520,7 @@ $('#requestForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Форма отзыва
+// ==================== ФОРМА ОТЗЫВА ====================
 $('#reviewForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!isLoggedIn) {
@@ -540,7 +556,7 @@ $('#reviewForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Форма профиля
+// ==================== ФОРМА ПРОФИЛЯ ====================
 $('#profileForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
@@ -575,7 +591,7 @@ $('#profileForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Форма отзыва в профиле
+// ==================== ФОРМА ОТЗЫВА В ПРОФИЛЕ ====================
 $('#myReviewForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     try {
@@ -600,7 +616,7 @@ $('#myReviewForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Форма вакансии
+// ==================== ФОРМА ВАКАНСИИ ====================
 $('#vacancyForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button[type="submit"]');
@@ -643,7 +659,7 @@ $('#vacancyForm')?.addEventListener('submit', async (e) => {
     }
 });
 
-// Загрузка данных
+// ==================== ЗАГРУЗКА ДАННЫХ ПРОФИЛЯ ====================
 async function loadProfileData() {
     if (!isLoggedIn) return;
     try {
@@ -761,6 +777,7 @@ async function cancelRequest(id) {
     }
 }
 
+// ==================== ВСПОМОГАТЕЛЬНЫЕ ====================
 function esc(s) {
     if (!s) return '';
     const d = document.createElement('div');
@@ -787,7 +804,7 @@ function statusText(s) {
     return statuses[s] || s;
 }
 
-// Превью фото
+// ==================== ПРЕВЬЮ ФОТО ====================
 $('#requestPhoto')?.addEventListener('change', function() {
     const file = this.files[0];
     const preview = $('#requestPhotoPreview');
@@ -818,6 +835,7 @@ function removePhoto() {
     if (prev) prev.innerHTML = '';
 }
 
+// ==================== АУТЕНТИФИКАЦИЯ ====================
 function openAuthModal(mode = 'login') {
     openModal('authModal');
     setAuthMode(mode);
@@ -854,6 +872,7 @@ $('#userName')?.addEventListener('click', () => {
     }
 });
 
+// ==================== ВЫХОД ====================
 async function handleLogout() {
     try {
         await API.logout();
@@ -870,6 +889,7 @@ async function handleLogout() {
 $$('.btn-logout-mobile').forEach(b => b?.addEventListener('click', handleLogout));
 $('#logoutBtnProfile')?.addEventListener('click', handleLogout);
 
+// ==================== КНОПКИ ====================
 $('#openRequestModal')?.addEventListener('click', () => {
     if (isLoggedIn) {
         openModal('requestModal');
@@ -903,13 +923,13 @@ $$('.btn-request').forEach(b => {
     });
 });
 
-// Навигация по ссылкам
+// ==================== НАВИГАЦИЯ ПО ССЫЛКАМ ====================
 $$('.nav-links a').forEach(a => {
     a.addEventListener('click', function(e) {
         const href = this.getAttribute('href');
 
         // Пропускаем внешние ссылки
-        if (href && (href.startsWith('admin/') || href.startsWith('http') || href === 'price-list.html')) return;
+        if (href && (href.startsWith('admin/') || href.startsWith('http') || href === 'news.html')) return;
 
         e.preventDefault();
 
@@ -922,6 +942,7 @@ $$('.nav-links a').forEach(a => {
     });
 });
 
+// ==================== ТАБЫ ПРОФИЛЯ ====================
 $$('.profile-tab').forEach(t => {
     t.addEventListener('click', () => {
         $$('.profile-tab').forEach(t2 => t2.classList.remove('active'));
@@ -933,16 +954,130 @@ $$('.profile-tab').forEach(t => {
     });
 });
 
+// ==================== МИНИМАЛЬНАЯ ДАТА ====================
 function setMinDates() {
     const today = new Date().toISOString().split('T')[0];
     const d = $('#requestPreferredDate');
     if (d) d.min = today;
 }
 
+// ==================== НОВОСТИ ====================
+async function loadNews() {
+    try {
+        const res = await API.request('news.php?action=all&limit=3');
+        if (res.success && res.news && res.news.length > 0) {
+            const grid = $('#newsGrid');
+            if (!grid) return;
+            grid.innerHTML = res.news.map(n => {
+                let imgHtml = '';
+                if (n.image) {
+                    imgHtml = `<div class="news-card-img-link" onclick="openImageModal('${n.image}')" title="Нажмите для просмотра">
+                        <img src="${n.image}" alt="${esc(n.title)}">
+                    </div>`;
+                } else {
+                    imgHtml = '<div class="news-card-img" style="background:linear-gradient(135deg,#2d3f63,#1a2b4c);display:flex;align-items:center;justify-content:center;font-size:40px;color:rgba(255,255,255,0.3)"><i class="fas fa-newspaper"></i></div>';
+                }
+                return `
+                <div class="news-card">
+                    ${imgHtml}
+                    <div class="news-card-body">
+                        <h3>${esc(n.title)}</h3>
+                        <div class="news-text">${esc(n.content)}</div>
+                        <span class="read-more" data-id="${n.id}" style="color:#ff6b35;font-weight:600;font-size:14px;cursor:pointer;text-decoration:underline">Читать далее</span>
+                        <div class="news-card-date"><i class="far fa-clock"></i> ${formatDate(n.created_at)}</div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Вешаем обработчики на "Читать далее"
+            $$('.read-more').forEach(span => {
+                span.addEventListener('click', function() {
+                    const id = this.dataset.id;
+                    loadSingleNews(id);
+                });
+            });
+        } else {
+            const grid = $('#newsGrid');
+            if (grid) grid.innerHTML = '<div class="no-reviews">Пока нет новостей</div>';
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки новостей:', e);
+    }
+}
+
+async function loadSingleNews(id) {
+    try {
+        const res = await API.request(`news.php?action=get&id=${id}`);
+        if (res.success && res.news) {
+            const n = res.news;
+            openNewsModal(n.title, n.content, n.image, formatDate(n.created_at));
+        }
+    } catch (e) {
+        showToast('Ошибка загрузки новости', 'error');
+    }
+}
+
+function openNewsModal(title, content, image, date) {
+    const modal = document.getElementById('newsModal');
+    const bodyEl = document.getElementById('newsModalBody');
+    if (!modal || !bodyEl) return;
+
+    let bodyHtml = '';
+    if (image) {
+        bodyHtml += `<div style="cursor:pointer;text-align:center;margin-bottom:20px" onclick="openImageModal('${image}')">
+            <img src="${image}" alt="${title}" style="max-width:100%;max-height:300px;border-radius:8px">
+        </div>`;
+    }
+    bodyHtml += `<div style="color:#999;font-size:13px;margin-bottom:15px"><i class="far fa-clock" style="color:#ff6b35;margin-right:5px"></i> ${date}</div>`;
+    bodyHtml += `<div style="color:#333;font-size:15px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word">${content}</div>`;
+
+    bodyEl.innerHTML = bodyHtml;
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+function closeNewsModal() {
+    var modal = document.getElementById('newsModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+
+function openImageModal(src) {
+    var modal = document.getElementById('imageModal');
+    var img = document.getElementById('imageModalImg');
+    if (modal && img) {
+        img.src = src;
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeImageModal() {
+    var modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+}
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
 document.addEventListener('DOMContentLoaded', async () => {
     setMinDates();
+    loadNews();
     await loadEmployees();
     await loadVacancies();
+
+        // Закрытие модалки новости по клику на фон
+    const newsModalBg = document.getElementById('newsModal');
+    if (newsModalBg) {
+        newsModalBg.addEventListener('click', function(e) {
+            if (e.target === this) closeNewsModal();
+        });
+    }
 
     try {
         const auth = await API.checkAuth();
@@ -963,3 +1098,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 window.cancelRequest = cancelRequest;
 window.removePhoto = removePhoto;
+window.openImageModal = openImageModal;
+window.closeImageModal = closeImageModal;
+window.openNewsModal = openNewsModal;
+window.closeNewsModal = closeNewsModal;

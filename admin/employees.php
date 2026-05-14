@@ -52,17 +52,18 @@ if (isset($_GET['edit'])) {
 <div class="admin-layout">
     <aside class="sidebar">
         <div class="sidebar-logo"><i class="fas fa-truck-moving"></i><span>ГЕРОН-АВТО</span></div>
-        <nav class="sidebar-nav">
-            <a href="index.php"><i class="fas fa-home"></i> Главная</a>
-            <a href="requests.php"><i class="fas fa-tools"></i> Заявки на ремонт</a>
-            <a href="resumes.php"><i class="fas fa-briefcase"></i> Заявки на вакансии</a>
-            <a href="employees.php" class="active"><i class="fas fa-users"></i> Сотрудники</a>
-            <a href="vacancies.php"><i class="fas fa-list-ul"></i> Вакансии</a>
-            <a href="import-price.php"><i class="fas fa-file-import"></i> Импорт прайса</a>
-            <a href="reviews.php"><i class="fas fa-star"></i> Отзывы</a>
-            <a href="profile.php"><i class="fas fa-user-cog"></i> Профиль</a>
-            <a href="logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Выйти</a>
-        </nav>
+<nav class="sidebar-nav">
+    <a href="index.php"><i class="fas fa-home"></i> Главная</a>
+    <a href="requests.php"><i class="fas fa-tools"></i> Заявки на ремонт</a>
+    <a href="resumes.php"><i class="fa-briefcase"></i> Заявки на вакансии</a>
+    <a href="employees.php" class="active"><i class="fas fa-users"></i> Сотрудники</a>
+    <a href="vacancies.php"><i class="fas fa-list-ul"></i> Вакансии</a>
+    <a href="import-price.php"><i class="fas fa-file-import"></i> Импорт прайса</a>
+    <a href="reviews.php"><i class="fa-star"></i> Отзывы</a>
+    <a href="news.php"><i class="fas fa-newspaper"></i> Новости</a>
+    <a href="profile.php"><i class="fas fa-user-cog"></i> Профиль</a>
+    <a href="logout.php" class="logout-link"><i class="fas fa-sign-out-alt"></i> Выйти</a>
+</nav>
     </aside>
     <main class="main-content">
         <div class="top-bar"><h1>Сотрудники</h1></div>

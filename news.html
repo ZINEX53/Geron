@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#1a2b4c">
+    <title>Новости | ГЕРОН-АВТО</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="geron.css">
+    <style>
+        .news-page { padding: 60px 0; min-height: 100vh; }
+        .news-page .section-title { margin-bottom: 40px; }
+        .news-full-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px; }
+        .news-full-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: 0.3s; }
+        .news-full-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.12); }
+        .news-full-img-link { display: block; cursor: pointer; overflow: hidden; }
+        .news-full-img-link img { width: 100%; height: 220px; object-fit: cover; transition: transform 0.3s; }
+        .news-full-img-link:hover img { transform: scale(1.05); }
+        .news-full-body { padding: 25px; }
+        .news-full-body h3 { color: #1a2b4c; margin-bottom: 12px; font-size: 20px; }
+        .news-full-text { color: #666; font-size: 15px; line-height: 1.6; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-full-date { color: #999; font-size: 13px; margin-top: 10px; }
+        .news-full-date i { margin-right: 5px; color: #ff6b35; }
+        .read-more { color: #ff6b35; font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: underline; }
+        .no-news { text-align: center; padding: 60px; color: #999; font-size: 18px; }
+        .no-news i { font-size: 60px; color: #ddd; display: block; margin-bottom: 20px; }
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 30px; }
+        #imageModal { z-index: 3000; align-items: center; justify-content: center; }
+        #imageModal img { max-width: 90%; max-height: 90vh; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); cursor: default; }
+        .image-modal-close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; z-index: 3001; }
+        .image-modal-close:hover { color: #ff6b35; }
+        @media (max-width: 576px) { .news-full-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container">
+        <nav class="navbar">
+            <a href="GERON.HTML" class="logo" style="text-decoration:none">
+                <div class="logo-icon"><i class="fas fa-truck-moving"></i></div>
+                <div class="logo-text">ГЕРОН-<span>АВТО</span></div>
+            </a>
+            <ul class="nav-links" style="list-style:none;display:flex;gap:30px">
+                <li><a href="GERON.HTML">Главная</a></li>
+                <li><a href="GERON.HTML#services">Услуги</a></li>
+                <li><a href="GERON.HTML#reviews">Отзывы</a></li>
+                <li><a href="GERON.HTML#vacancies">Вакансии</a></li>
+                <li><a href="news.html" class="active">Новости</a></li>
+                <li><a href="GERON.HTML#contacts">Контакты</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <section class="news-page">
+        <div class="container">
+            <a href="GERON.HTML" class="btn btn-outline btn-back"><i class="fas fa-arrow-left"></i> На главную</a>
+            <h2 class="section-title">Новости</h2>
+            <div class="news-full-grid" id="allNewsGrid">
+                <div class="no-news"><i class="fas fa-spinner fa-spin"></i>Загрузка новостей...</div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>ГЕРОН-АВТО</h3>
+                <p>Профессиональный ремонт грузовых автомобилей и прицепов с 2008 года.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Контакты</h3>
+                <p><i class="fas fa-map-marker-alt"></i> г. Санкт-Петербург, пр-кт. Екатериненский, 3 литера Б</p>
+                <p><i class="fas fa-phone"></i> +7 (495) 123-45-67</p>
+                <p><i class="fas fa-envelope"></i> info@geron-auto.ru</p>
+            </div>
+            <div class="footer-column">
+                <h3>Часы работы</h3>
+                <p>Пн-Пт: 8:00 - 20:00</p>
+                <p>Сб: 9:00 - 18:00</p>
+                <p>Вс: 9:00 - 16:00</p>
+            </div>
+        </div>
+        <div class="copyright"><p>&copy; 2026 Автосервис "ГЕРОН-АВТО". Все права защищены.</p></div>
+    </div>
+</footer>
+
+<!-- Модалка просмотра картинки -->
+<div class="modal-overlay" id="imageModal" style="display:none" onclick="closeImageModal()">
+    <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+    <img id="imageModalImg" src="" alt="Просмотр изображения" onclick="event.stopPropagation()">
+</div>
+
+<!-- Модалка просмотра новости -->
+<div class="modal-overlay" id="newsModal" style="display:none" onclick="closeNewsModal()">
+    <div class="modal" style="max-width:700px" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="newsModalTitle">Новость</h3>
+            <span onclick="closeNewsModal()" style="cursor:pointer;font-size:28px;line-height:1;color:#999">&times;</span>
+        </div>
+        <div class="modal-body" id="newsModalBody"></div>
+    </div>
+</div>
+
+<script>
+var API_BASE = 'api/';
+
+function esc(s) {
+    if (!s) return '';
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+}
+
+function formatDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function openImageModal(src) {
+    var modal = document.getElementById('imageModal');
+    var img = document.getElementById('imageModalImg');
+    if (modal && img) {
+        img.src = src;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeImageModal() {
+    var modal = document.getElementById('imageModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+function openNewsModal(title, content, image, date) {
+    var modal = document.getElementById('newsModal');
+    var bodyEl = document.getElementById('newsModalBody');
+    var titleEl = document.getElementById('newsModalTitle');
+    if (!modal || !bodyEl) return;
+
+    if (titleEl) titleEl.textContent = title;
+
+    var bodyHtml = '';
+    if (image) {
+        bodyHtml += '<div style="cursor:pointer;text-align:center;margin-bottom:20px" onclick="openImageModal(\'' + image + '\')"><img src="' + image + '" alt="' + title + '" style="max-width:100%;max-height:300px;border-radius:8px"></div>';
+    }
+    bodyHtml += '<div style="color:#999;font-size:13px;margin-bottom:15px"><i class="far fa-clock" style="color:#ff6b35;margin-right:5px"></i> ' + date + '</div>';
+    bodyHtml += '<div style="color:#333;font-size:15px;line-height:1.7;white-space:pre-wrap;word-wrap:break-word">' + content + '</div>';
+
+    bodyEl.innerHTML = bodyHtml;
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeNewsModal() {
+    var modal = document.getElementById('newsModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+async function loadAllNews() {
+    try {
+        var res = await fetch(API_BASE + 'news.php?action=all&limit=50').then(function(r) { return r.json(); });
+        var grid = document.getElementById('allNewsGrid');
+        if (!grid) return;
+
+        if (res.success && res.news && res.news.length > 0) {
+            grid.innerHTML = res.news.map(function(n) {
+                var imgHtml = '';
+                if (n.image) {
+                    imgHtml = '<div class="news-full-img-link" onclick="openImageModal(\'' + n.image + '\')" title="Нажмите для просмотра"><img src="' + n.image + '" alt="' + esc(n.title) + '"></div>';
+                } else {
+                    imgHtml = '<div class="news-full-img-link" style="background:linear-gradient(135deg,#2d3f63,#1a2b4c);height:220px;display:flex;align-items:center;justify-content:center;font-size:50px;color:rgba(255,255,255,0.2)"><i class="fas fa-newspaper"></i></div>';
+                }
+                var dateStr = formatDate(n.created_at);
+                return '<div class="news-full-card">' + imgHtml + '<div class="news-full-body"><h3>' + esc(n.title) + '</h3><div class="news-full-text">' + esc(n.content) + '</div><span class="read-more" data-id="' + n.id + '">Читать далее</span><div class="news-full-date"><i class="far fa-clock"></i> ' + dateStr + '</div></div></div>';
+            }).join('');
+
+            // Вешаем обработчики на "Читать далее"
+            var readMoreButtons = document.querySelectorAll('.read-more');
+            readMoreButtons.forEach(function(span) {
+                span.addEventListener('click', function() {
+                    var id = this.dataset.id;
+                    loadSingleNews(id);
+                });
+            });
+        } else {
+            grid.innerHTML = '<div class="no-news"><i class="fas fa-newspaper"></i>Новостей пока нет</div>';
+        }
+    } catch (e) {
+        document.getElementById('allNewsGrid').innerHTML = '<div class="no-news">Ошибка загрузки новостей</div>';
+    }
+}
+
+async function loadSingleNews(id) {
+    try {
+        var res = await fetch(API_BASE + 'news.php?action=get&id=' + id).then(function(r) { return r.json(); });
+        if (res.success && res.news) {
+            var n = res.news;
+            openNewsModal(n.title, n.content, n.image, formatDate(n.created_at));
+        }
+    } catch (e) {
+        alert('Ошибка загрузки новости');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadAllNews);
+</script>
+
+</body>
+</html>
